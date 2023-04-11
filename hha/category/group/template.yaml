@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Api:
+    TracingEnabled: true
+  Function:
+    MemorySize: 128
+    Timeout: 3
+    Tracing: Active
+
+Resources:
+  Function:
+    Properties:
+      Architectures:
+      - x86_64
+      CodeUri: src/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Events:
+        Default:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+    Type: AWS::Serverless::Function
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Join:
+        - ''
+        - - ApplicationInsights-SAM-
+          - Ref: AWS::StackName
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Fn::Join:
+        - ''
+        - - ApplicationInsights-SAM-
+          - Ref: AWS::StackName
+      AutoConfigurationEnabled: 'true'
+    DependsOn: ApplicationResourceGroup
